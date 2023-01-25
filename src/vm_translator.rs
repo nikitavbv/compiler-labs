@@ -20,32 +20,134 @@ impl CodeWriter {
         }
     }
 
+    fn get_next_label(&mut self) -> String {
+        unimplemented!()
+    }
+
     fn write(&mut self, line: &str) {
-        self.output_file.write(&line.as_bytes()).unwrap();
+        self.output_file.write(&format!("{}\n", line).as_bytes()).unwrap();
     }
 
     fn write_comment(&mut self, text: &str) {
         self.write(&format!("// {}", text));
     }
 
-    fn write_push(&self, segment: &str, address: &str) {
-        unimplemented!()
+    fn pushd(&mut self) {
+        self.write("@SP");
+        self.write("M=M+1");
+        self.write("A=M-A");
+        self.write("M=D");
     }
 
-    fn write_pop(&self, segment: &str, address: &str) {
-        unimplemented!()
+    fn popd(&mut self) {
+        self.write("@SP");
+        self.write("AM=M-1");
+        self.write("D=M");
     }
 
-    fn write_add(&self) {
-        unimplemented!()
+    fn push_constant(&mut self, value: &str) {
+        self.write(&format!("@{}", value));
+        self.write("D=A");
+        self.pushd();
     }
 
-    fn write_sub(&self) {
-        unimplemented!()
+    fn push_register(&mut self, value: &str) {
+        self.write(&format!("@{}", value));
+        self.write("D=M");
+        self.pushd();
     }
 
-    fn write_eq(&self) {
-        unimplemented!()
+    fn push_segment(&mut self, segment_register: &str, address: &str) {
+        self.write(&format!("@{}", segment_register));
+        self.write("D=M");
+        self.write(&format!("@{}", address));
+        self.write("A=D+A");
+        self.write("D=M");
+        self.pushd();
+    }
+
+    fn write_push(&mut self, segment: &str, address: &str) {
+        match segment {
+            "constant" => self.push_constant(address),
+            "pointer" => self.push_register(&format!("R{}", address.parse::<usize>().unwrap() + 3)),
+            "temp" => self.push_register(&format!("R{}", address.parse::<usize>().unwrap() + 5)),
+            "static" => self.push_register(&format!("S{}", address)),
+            "local" => self.push_segment("LCL", address),
+            "argument" => self.push_segment("ARG", address),
+            "this" => self.push_segment("THIS", address),
+            "that" => self.push_segment("THAT", address),
+            other => panic!("Unknown push segment {}", other),
+        }
+    }
+
+    fn pop_register(&mut self, register: &str) {
+        self.popd();
+        self.write(&format!("@{}", register));
+        self.write("M=D");
+    }
+
+    fn pop_segment(&mut self, segment_register: &str, address: &str) {
+        self.write(&format!("@{}", segment_register));
+        self.write("D=M");
+        self.write(&format!("@{}", address));
+        self.write("D=D+A");
+        self.write("@R13");
+        self.write("M=D");
+        self.popd();
+        self.write("@R13");
+        self.write("A=M");
+        self.write("M=D");
+    }
+
+    fn write_pop(&mut self, segment: &str, address: &str) {
+        match segment {
+            "pointer" => self.pop_register(&format!("R{}", address.parse::<usize>().unwrap() + 3)),
+            "temp" => self.pop_register(&format!("R{}", address.parse::<usize>().unwrap() + 5)),
+            "static" => self.pop_register(&format!("S{}", address)),
+            "local" => self.pop_segment("LCL", address),
+            "argument" => self.pop_segment("ARG", address),
+            "this" => self.pop_segment("THIS", address),
+            "that" => self.pop_segment("THAT", address),
+            other => panic!("Unknown pop segment {}", other),
+        }
+    }
+
+    fn write_add(&mut self) {
+        self.write("@SP");
+        self.write("AM=M-1");
+        self.write("D=M");
+        self.write("A=A-1");
+        self.write("M=D+M");
+    }
+
+    fn write_sub(&mut self) {
+        self.write("@SP");
+        self.write("AM=M-1");
+        self.write("D=M");
+        self.write("A=A-1");
+        self.write("M=M-D");
+    }
+
+    fn write_eq(&mut self) {
+        let label1 = self.get_next_label();
+        let label2 = self.get_next_label();
+        self.write("@SP");
+        self.write("AM=M-1");
+        self.write("D=M");
+        self.write("A=A-1");
+        self.write("D=M-D");
+        self.write(&format!("@{}", label1));
+        self.write("D;JEQ");
+        self.write("@SP");
+        self.write("A=M-1");
+        self.write("M=0");
+        self.write(&format!("@{}", label2));
+        self.write("0;JMP");
+        self.write(&format!("({})", label1));
+        self.write("@SP");
+        self.write("A=M-1");
+        self.write("M=-1");
+        self.write(&format!("({})", label2));
     }
 
     fn write_lt(&self) {
