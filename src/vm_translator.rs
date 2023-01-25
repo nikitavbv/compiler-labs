@@ -1,5 +1,5 @@
 use {
-    std::{fs::File, io::{BufReader, BufRead, Write}},
+    std::{fs::{File, FileType}, path::Path, io::{BufReader, BufRead, Write}},
     lazy_static::lazy_static,
     regex::Regex,
 };
@@ -290,6 +290,13 @@ pub fn translate_file(input_file: File, output_file: File) {
     parser.parse_file(input_file);
 }
 
-pub fn translate_directory() {
-    unimplemented!()
+pub fn translate_directory(input_directory: &Path, output_file: File) {
+    let writer = CodeWriter::new(output_file);
+
+    for entry in walkdir::WalkDir::new(input_directory) {
+        let entry = entry.unwrap();
+        if entry.file_type().is_file() && entry.file_name().to_string_lossy().ends_with(".vm") {
+            unimplemented!() 
+        }
+    }
 }
