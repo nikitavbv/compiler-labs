@@ -153,28 +153,79 @@ impl CodeWriter {
         self.write(&format!("({})", label2));
     }
 
-    fn write_lt(&self) {
-        unimplemented!()
+    fn write_lt(&mut self) {
+        let label1 = self.get_next_label();
+        let label2 = self.get_next_label();
+        self.write("@SP");
+        self.write("M=M-1");
+        self.write("A=M");
+        self.write("D=M");
+        self.write("A=A-1");
+        self.write("D=M-D");
+        self.write(&format!("@{}", label1));
+        self.write("D;JLT");
+        self.write("@SP");
+        self.write("A=M-1");
+        self.write("M=0");
+        self.write(&format!("@{}", label2));
+        self.write("0;JMP");
+        self.write(&format!("({})", label1));
+        self.write("@SP");
+        self.write("A=M-1");
+        self.write("M=-1");
+        self.write(&format!("({})", label2));
     }
 
-    fn write_gt(&self) {
-        unimplemented!()
+    fn write_gt(&mut self) {
+        let label1 = self.get_next_label();
+        let label2 = self.get_next_label();
+        self.write("@SP");
+        self.write("M=M-1");
+        self.write("A=M");
+        self.write("D=M");
+        self.write("A=A-1");
+        self.write("D=M-D");
+        self.write(&format!("@{}", label1));
+        self.write("D;JGT");
+        self.write("@SP");
+        self.write("A=M-1");
+        self.write("M=0");
+        self.write(&format!("@{}", label2));
+        self.write("0;JMP");
+        self.write(&format!("({})", label1));
+        self.write("A=M-1");
+        self.write("M=-1");
+        self.write(&format!("({})", label2));
     }
 
-    fn write_neg(&self) {
-        unimplemented!()
+    fn write_neg(&mut self) {
+        self.write("@SP");
+        self.write("A=M-1");
+        self.write("M=-M");
     }
 
-    fn write_and(&self) {
-        unimplemented!()
+    fn write_and(&mut self) {
+        self.write("@SP");
+        self.write("AM=M-1");
+        self.write("D=M");
+        self.write("A=A-1");
+        self.write("M=D&M");
     }
 
-    fn write_or(&self) {
-        unimplemented!()
+    fn write_or(&mut self) {
+        self.write("@SP");
+        self.write("AM=M-1");
+        self.write("D=!M");
+        self.write("A=A-1");
+        self.write("M=!M");
+        self.write("M=D&M");
+        self.write("M=!M");
     }
 
-    fn write_not(&self) {
-        unimplemented!()
+    fn write_not(&mut self) {
+        self.write("@SP");
+        self.write("A=M-1");
+        self.write("M=!M");
     }
 }
 
