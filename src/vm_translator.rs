@@ -289,3 +289,7 @@ pub fn translate_file(input_file: File, output_file: File) {
     let mut parser = Parser::new(writer);
     parser.parse_file(input_file);
 }
+
+pub fn translate_directory() {
+    unimplemented!()
+}
