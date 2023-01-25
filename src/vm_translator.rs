@@ -11,17 +11,20 @@ lazy_static! {
 
 struct CodeWriter {
     output_file: File,
+    label_no: u64,
 }
 
 impl CodeWriter {
     pub fn new(output_file: File) -> Self {
         Self {
             output_file,
+            label_no: 0,
         }
     }
 
     fn get_next_label(&mut self) -> String {
-        unimplemented!()
+        self.label_no += 1;
+        format!("LABEL{}", self.label_no)
     }
 
     fn write(&mut self, line: &str) {
